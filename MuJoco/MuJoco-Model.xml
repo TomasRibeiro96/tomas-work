@@ -1,0 +1,72 @@
+<mujoco model="robot_arm">
+    <compiler inertiafromgeom="true" angle="degree"/>
+
+    <option timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="pyramidal"/>
+
+    <size nconmax="50" njmax="200" nstack="10000"/>
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1="1 1 1" rgb2=".6 .8 1" 
+                 width="256" height="256"/>
+    </asset>
+
+
+    <worldbody>
+        <light pos="0 0 10" dir="0 0 -1" diffuse=".5 .5 .5"/>
+
+        <!-- GROUND -->
+        <geom name="ground" type="plane" size="20 20 .001" rgba="1 1 1 1"/>
+
+        <!-- BASE -->
+        <body name="base" pos="0 0 0">
+            <inertial pos="0 0 .25" mass="50"/>
+            <geom name="base" type="cylinder" rgba=".8 0 0 1" fromto="0 0 0 0 0 .5" size="1"/>
+            <!-- UPPER ARM -->
+            <body name="upper_arm">
+                <inertial pos="0 1 1.9" mass="10"/>
+                <geom name="upper_arm" type="capsule" density="100" rgba="0 .8 0 1" fromto="0 0 .8 0 2 3" size=".3"/>
+                <joint name="shoulder" type="hinge" pos="0 0 .8" axis="1 0 0" range="-48 132"
+                       damping="100" stiffness="200" limited="true"/>
+                <!-- LOWER ARM -->
+                <body name="lower_arm">
+                    <inertial pos=".6 2.75 2" mass="10"/>
+                    <geom name="lower_arm" type="capsule" density="100" rgba="0 0 .8 1" fromto=".6 2 3 .6 3.5 1" size=".3"/>
+                    <joint name="elbow" type="hinge" pos=".6 2 3" axis="1 0 0" range="-79 100"
+                       damping="100" stiffness="200" limited="true"/>
+                </body>
+            </body>
+        </body>
+
+        <!-- BOX -->
+        <body name="box" pos=".6 5 .8">
+            <inertial pos=".6 5 .8" mass="5"/>
+            <geom name="box" type="box" rgba="1 1 0 1" size=".8 .8 .8"/>
+            <joint type="free"/>
+        </body>
+
+        <!-- TARGET -->
+        <body name="target" pos=".6 7.5 .8">
+            <geom name="target" type="box" rgba="1 0 0 .2" size=".8 .8 .8"/>
+        </body>
+    </worldbody>
+
+
+    <actuator>
+        <general name="shoulder" joint="shoulder" gear="500" ctrlrange="-90 90" ctrllimited="true"/>
+        <general name="elbow" joint="elbow" gear="500" ctrlrange="-90 90" ctrllimited="true"/>
+    </actuator>
+
+    <contact>
+        <pair name="box-ground" geom1="box" geom2="ground" condim="3" friction=".3 .3"/>
+        <pair name="box-lower_arm" geom1="box" geom2="lower_arm" condim="3" friction="1 1 1 1 1"/>
+        <exclude name="box-target" body1="box" body2="target"/>
+    </contact>
+
+    <sensor>
+        <jointpos name="shoulder_pos_sensor" joint="shoulder"/>
+        <jointpos name="elbow_pos_sensor" joint="elbow"/>
+        <actuatorfrc name="shoulder_force_sensor" actuator="shoulder"/>
+        <actuatorfrc name="elbow_force_sensor" actuator="elbow"/>
+    </sensor>
+
+</mujoco>
